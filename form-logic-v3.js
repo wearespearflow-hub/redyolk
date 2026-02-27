@@ -1,4 +1,3 @@
-
 /* ============================================================
    RED YOLK — Contact Form Logic
    Paste inside a <script> tag: Webflow → Page Settings → Before </body>
@@ -48,6 +47,14 @@ document.addEventListener('DOMContentLoaded', function () {
     required ? input.setAttribute('required', '') : input.removeAttribute('required');
   }
 
+  /* Strip required from ALL fields inside a step element */
+  function clearRequiredInStep(stepEl) {
+    if (!stepEl) return;
+    stepEl.querySelectorAll('[required]').forEach(function (f) {
+      f.removeAttribute('required');
+    });
+  }
+
   function isFieldHidden(field, stepEl) {
     var el = field.parentElement;
     while (el && el !== stepEl) {
@@ -55,31 +62,6 @@ document.addEventListener('DOMContentLoaded', function () {
       el = el.parentElement;
     }
     return false;
-  }
-
-  /* ── Step validity check (used only for Next gating) ──── */
-  function stepIsValid(stepEl) {
-    if (!stepEl) return true;
-    var fields = stepEl.querySelectorAll('[required]');
-    for (var i = 0; i < fields.length; i++) {
-      var f = fields[i];
-      if (isFieldHidden(f, stepEl)) continue;
-      if (!f.validity.valid) return false;
-    }
-    return true;
-  }
-
-  /* ── Before native submit, clear inactive path's required
-        so the browser doesn't complain about hidden fields ── */
-  if (form) {
-    form.addEventListener('submit', function() {
-      if (currentPath === 'brand') {
-        if (stepCreator1) stepCreator1.querySelectorAll('[required]').forEach(function(f) { f.removeAttribute('required'); });
-        if (stepCreator2) stepCreator2.querySelectorAll('[required]').forEach(function(f) { f.removeAttribute('required'); });
-      } else if (currentPath === 'creator') {
-        if (stepBrand) stepBrand.querySelectorAll('[required]').forEach(function(f) { f.removeAttribute('required'); });
-      }
-    });
   }
 
   /* ── Full form reset ──────────────────────────────────── */
@@ -130,12 +112,22 @@ document.addEventListener('DOMContentLoaded', function () {
     radio.addEventListener('change', function() {
       if (radio.value === 'Brand / Business') {
         currentPath = 'brand';
+
+        /* ✅ Clear required from ALL creator fields so browser doesn't block submit */
+        clearRequiredInStep(stepCreator1);
+        clearRequiredInStep(stepCreator2);
+
         hideStep(step1);
         hideStep(stepCreator1);
         hideStep(stepCreator2);
         showStep(stepBrand);
+
       } else if (radio.value === 'Creator / Talent') {
         currentPath = 'creator';
+
+        /* ✅ Clear required from ALL brand fields so browser doesn't block submit */
+        clearRequiredInStep(stepBrand);
+
         hideStep(step1);
         hideStep(stepBrand);
         hideStep(stepCreator2);
@@ -191,13 +183,12 @@ document.addEventListener('DOMContentLoaded', function () {
     nextBtn.addEventListener('click', function(e) {
       e.preventDefault();
 
-      // Use browser's native reportValidity to show default errors
       var allValid = true;
       if (stepCreator1) {
         stepCreator1.querySelectorAll('[required], [type="email"], [type="url"], [pattern]').forEach(function(f) {
           if (isFieldHidden(f, stepCreator1)) return;
           if (!f.validity.valid) {
-            if (allValid) f.reportValidity(); // browser shows its tooltip on the first invalid field
+            if (allValid) f.reportValidity();
             allValid = false;
           }
         });
