@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const stepCreator1 = document.querySelector('.form_step.is-creator1');
   const stepCreator2 = document.querySelector('.form_step.is-creator2');
 
-  const radioInputs = document.querySelectorAll('input[name="Guest-Type"]');
+  const radioInputs = document.querySelectorAll('input[name="form_type"]');
 
   const creatorTypeSelect = document.getElementById('Creator-Type');
   const portfolioWrap     = document.getElementById('portfolio');
